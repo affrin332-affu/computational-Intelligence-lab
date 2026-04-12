@@ -1,0 +1,128 @@
+class Graph:
+    def __init__(self):
+        self.adjacency_list = {}
+
+    def add_node(self, node):
+        if node not in self.adjacency_list:
+            self.adjacency_list[node] = []
+
+    def add_edge(self, u, v, cost):
+        self.add_node(u)
+        self.add_node(v)
+        self.adjacency_list[u].append((v, cost))
+        self.adjacency_list[v].append((u, cost))
+
+    def display(self):
+        print("\nGraph:")
+        for node in self.adjacency_list:
+            print(node, "->", self.adjacency_list[node])
+
+
+def a_star_search(graph, start, goal, heuristic):
+    open_list = [start]
+    visited = []
+    cost = {start: 0}
+    parent = {start: None}
+
+    print("\nInitial State")
+    print("Fringe:", [(n, cost[n], heuristic[n], cost[n] + heuristic[n]) for n in open_list])
+    print("Visited:", visited)
+    print()
+
+    while open_list:
+        best_node = None
+        best_value = float('inf')
+
+        for node in open_list:
+            f = cost[node] + heuristic[node]
+            if f < best_value:
+                best_value = f
+                best_node = node
+
+        current = best_node
+
+        print(f"Expanding: {current}    g(n)={cost[current]}    h(n)={heuristic[current]}    f(n)={cost[current] + heuristic[current]}")
+        print()
+
+        open_list.remove(current)
+        visited.append(current)
+
+        if current == goal:
+            print("\nGoal Reached!")
+            print("Fringe:", [])
+            print("Visited:", visited)
+            return parent, cost[goal]
+
+        for neighbor, step_cost in graph.adjacency_list.get(current, []):
+            new_cost = cost[current] + step_cost
+
+            if neighbor not in cost or new_cost < cost[neighbor]:
+                cost[neighbor] = new_cost
+                parent[neighbor] = current
+                if neighbor not in visited and neighbor not in open_list:
+                    open_list.append(neighbor)
+
+        print("Fringe:", [(n, cost[n], heuristic[n], cost[n] + heuristic[n]) for n in open_list])
+        print("Visited:", visited)
+        print()
+
+    return None, None
+
+
+def print_solution(goal, parent, total_cost):
+    path = []
+    while goal is not None:
+        path.append(goal)
+        goal = parent.get(goal)
+    path.reverse()
+
+    print("\nFinal Path:", " -> ".join(path))
+    print("Total Cost:", total_cost)
+
+
+# ---------------- MAIN PROGRAM ----------------
+graph = Graph()
+
+n_nodes = int(input("Enter number of nodes: "))
+print("Enter node names:")
+for _ in range(n_nodes):
+    graph.add_node(input())
+
+n_edges = int(input("Enter number of edges (u v cost): "))
+for _ in range(n_edges):
+    u, v, c = input().split()
+    graph.add_edge(u, v, int(c))
+
+heuristic = {}
+print("\nEnter heuristic values:")
+for node in graph.adjacency_list:
+    heuristic[node] = int(input(f"h({node}) = "))
+
+while True:
+    print("\n--- MENU ---")
+    print("1. Display Graph")
+    print("2. Perform A* Search")
+    print("3. Exit")
+
+    choice = input("Enter choice: ")
+
+    if choice == '1':
+        graph.display()
+
+    elif choice == '2':
+        start = input("Enter start node: ")
+        goal = input("Enter goal node: ")
+
+        parent, total_cost = a_star_search(graph, start, goal, heuristic)
+
+        if parent:
+            print_solution(goal, parent, total_cost)
+        else:
+            print("\nGoal Not Found!")
+
+    elif choice == '3':
+        print("Exiting...")
+        break
+
+    else:
+        print("Invalid choice")
